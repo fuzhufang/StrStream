@@ -4,6 +4,7 @@
 #include <limits>
 #include <string>
 #include <assert.h>
+#include <algorithm>
 #ifdef __GNUC__ 
 	#include <stdint.h>
 #endif
@@ -185,23 +186,6 @@ namespace share
             int  _capacity; // 当前的空间容纳量.
         };
 
-
-        // 专门交换一个char
-        static inline void swap(char &a, char &b)
-        {
-            char t = a;
-            a = b;
-            b = t;
-            //printf("a=%c, b=%c\n", a, b);
-        }
-
-        static inline void reverse(char* first, char* last)
-        {
-            for (; first < last && first != --last; ++first) {
-                swap(*first, *last);
-            }
-        }
-
         template<typename T>
         size_t convert(char buf[], T value)
         {
@@ -220,7 +204,7 @@ namespace share
                 *p++ = '-';
             }
             *p = '\0';
-            reverse(buf, p);
+            std::reverse(buf, p);
             return p - buf;
         }
 
@@ -237,7 +221,7 @@ namespace share
                 *p++ = digitsHex[lsd];
             } while (i != 0);
             *p = '\0';
-            reverse(buf, p);
+            std::reverse(buf, p);
             return p - buf;
         }
 
@@ -382,7 +366,7 @@ namespace share
                 return *this;
             }
 
-            self& operator<<(const std::string& v) // FIXME: StringPiece
+            self& operator<<(const std::string& v) 
             {
                 _buffer._append(v.c_str(), static_cast<int>(v.size()));
                 return *this;
