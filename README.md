@@ -39,3 +39,5 @@ A fast string stream
 
 ## 例如编译测试用例 ##
 g++ test_main.cc -o test
+
+用vs2005或以上版本 创建一个vc++项目,把文件添加进去就能使用.
