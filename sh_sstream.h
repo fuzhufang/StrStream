@@ -189,12 +189,9 @@ namespace share
         // 专门交换一个char
         static inline void swap(char &a, char &b)
         {
-            // 注意 a 和 b 不能同时指向同一个对象. 否则会出错.
-            // 因为后面的使用可以保证 a和b不是同一对象,所以出于性能考虑,这里就不做这个判断
-            //if (x==b) return;
-            a = a ^ b;
-            b = a ^ b;
-            a = a ^ b;
+            char t = a;
+            a = b;
+            b = t;
             //printf("a=%c, b=%c\n", a, b);
         }
 
@@ -339,7 +336,7 @@ namespace share
                 char* buf = _buffer._current();
                 buf[0] = '0';
                 buf[1] = 'x';
-                _buffer._add(convert2hex(buf+2, v)+2);
+                _buffer._add(static_cast<int>(convert2hex(buf+2, v))+2);
                 return *this;
             }
 
@@ -415,7 +412,7 @@ namespace share
                         return ;
                     }
                 }
-                _buffer._add(convert(_buffer._current(), v));
+                _buffer._add(static_cast<int>(convert(_buffer._current(), v)));
             }
 
             Buffer _buffer;
