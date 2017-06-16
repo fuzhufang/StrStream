@@ -6,7 +6,7 @@
 #include <assert.h>
 #include <algorithm>
 #ifdef __GNUC__ 
-	#include <stdint.h>
+#include <stdint.h>
 #endif
 #include <cstring>
 #include <stdlib.h>
@@ -14,12 +14,12 @@
 
 
 #ifndef __GNUC__ 
-	#if  _MSC_VER >= 1900
-	#else
-		#ifndef snprintf
-			#define snprintf _snprintf
-		#endif
-	#endif
+#if  _MSC_VER >= 1900
+#else
+#ifndef snprintf
+#define snprintf _snprintf
+#endif
+#endif
 #endif
 
 namespace share
@@ -88,21 +88,14 @@ namespace share
 
             inline int avail() const 
             {
-                return static_cast<int>(_end() - _cur);
+                return static_cast<int>(end() - _cur);
             }
 
-            // return the string copy, for test 
-            std::string to_string() const 
+            void append(const char* buf, int len)
             {
-                return std::string(_data, length()); 
-            }
-
-        private:
-            void _append(const char* buf, int len)
-            {
-				assert(len>=0);
+                assert(len>=0);
                 if (avail() < len) {
-                    if ( NULL == _malloc_heap(_cur_capacity()*2+len) ) {
+                    if ( NULL == _malloc_heap(cur_capacity()*2+len) ) {
                         return;
                     }
                 }
@@ -110,15 +103,39 @@ namespace share
                 _cur += len;
             }
 
-            inline char* _current() 
+            inline char* current()const
             {
                 return _cur;
             }
 
-            inline void _add(int len) 
+            // 这是一个奇怪的接口,从右到左,减少 len给字符
+            inline void dec_length(int len)
             {
-				assert(len>=0);
-                _cur += len;                
+                if (len<1) return;
+                if (len >= static_cast<int>(_cur - _data)) {
+                    _cur = _data;
+                    return;
+                }
+                _cur -= len;
+            }
+
+            inline const char* end() const
+            {
+                return _data + cur_capacity();
+            }
+
+            inline int cur_capacity()const 
+            {
+                return _capacity;
+            }
+
+
+        private:
+            // 使用者自己保证 len的有效性
+            inline void _inc_length(int len) 
+            {
+                assert(len>=0);
+                _cur += len;
             }
 
             void _reset() 
@@ -130,17 +147,6 @@ namespace share
                 _cur = _data;
                 _capacity = SIZE;
             }
-
-            inline const char* _end() const
-            {
-                return _data + _cur_capacity();
-            }
-
-            inline int _cur_capacity()const 
-            {
-                return _capacity;
-            }
-
 
             // 申请成功返回 not NULL, 否则返回NULL
             char* _malloc_heap(int new_size)
@@ -244,13 +250,13 @@ namespace share
 
             self& operator<<(bool v)
             {
-                _buffer._append(v ? "1" : "0", 1);
+                _buffer.append(v ? "1" : "0", 1);
                 return *this;
             }
 
             self& operator<<(char v)
             {
-                _buffer._append(&v, 1);
+                _buffer.append(&v, 1);
                 return *this;
             }
 
@@ -312,15 +318,15 @@ namespace share
             {
                 uintptr_t v = reinterpret_cast<uintptr_t>(p);
                 if (_buffer.avail() < MAX_NUMERIC_SIZE) {
-                    if ( NULL == _buffer._malloc_heap(2*_buffer._cur_capacity()+MAX_NUMERIC_SIZE) ) {
+                    if ( NULL == _buffer._malloc_heap(2*_buffer.cur_capacity()+MAX_NUMERIC_SIZE) ) {
                         assert(false);
                         return *this;
                     }
                 }
-                char* buf = _buffer._current();
+                char* buf = _buffer.current();
                 buf[0] = '0';
                 buf[1] = 'x';
-                _buffer._add(static_cast<int>(convert2hex(buf+2, v))+2);
+                _buffer._inc_length(static_cast<int>(convert2hex(buf+2, v))+2);
                 return *this;
             }
 
@@ -333,53 +339,71 @@ namespace share
             self& operator<<(double v)
             {
                 if (_buffer.avail() < MAX_NUMERIC_SIZE) {
-                    if ( NULL == _buffer._malloc_heap(2*_buffer._cur_capacity()+MAX_NUMERIC_SIZE) ) {
+                    if ( NULL == _buffer._malloc_heap(2*_buffer.cur_capacity()+MAX_NUMERIC_SIZE) ) {
                         return *this;
                     }
                 }
-                int len = snprintf(_buffer._current(), MAX_NUMERIC_SIZE, "%.12g", v);
-                _buffer._add(len);
+                int len = snprintf(_buffer.current(), MAX_NUMERIC_SIZE, "%.12g", v);
+                _buffer._inc_length(len);
                 return *this;
             }
 
             self& operator<<(long double v)
             {
                 if (_buffer.avail() < MAX_NUMERIC_SIZE) {
-                    if ( NULL == _buffer._malloc_heap(2*_buffer._cur_capacity()+MAX_NUMERIC_SIZE) ) {
+                    if ( NULL == _buffer._malloc_heap(2*_buffer.cur_capacity()+MAX_NUMERIC_SIZE) ) {
                         return *this;
                     }
                 }
-                int len = snprintf(_buffer._current(), MAX_NUMERIC_SIZE, "%.12g", v);
-                _buffer._add(len);
+                int len = snprintf(_buffer.current(), MAX_NUMERIC_SIZE, "%.12g", v);
+                _buffer._inc_length(len);
                 return *this;
             }
 
             self& operator<<(const StrMark& v)
             {
-                _buffer._append(v._str, static_cast<int>(v._len));
+                _buffer.append(v._str, static_cast<int>(v._len));
                 return *this;
             }
 
             self& operator<<(const char* v)
             {
-                _buffer._append(v, static_cast<int>(strlen(v)));
+                _buffer.append(v, static_cast<int>(strlen(v)));
                 return *this;
             }
 
             self& operator<<(const std::string& v) 
             {
-                _buffer._append(v.c_str(), static_cast<int>(v.size()));
+                _buffer.append(v.c_str(), static_cast<int>(v.size()));
                 return *this;
             }
 
             void append(const char* data, int len) 
             { 
-                _buffer._append(data, len); 
+                _buffer.append(data, len); 
             }
 
-            const Buffer& buffer() const 
-            { 
-                return _buffer;
+            // 返回的字符串,会加上字符串结束符
+            const char* data() const 
+            {
+                return _buffer.data();
+            }
+
+            inline int length() const
+            {
+                return _buffer.length();
+            }
+
+            // return the string copy
+            std::string to_string() const 
+            {
+                return std::string(_buffer.data(), _buffer.length()); 
+            }
+
+            // 返回的字符串,会加上字符串结束符
+            const char* c_str()const 
+            {
+                return _buffer.data();
             }
 
             void reset_buffer() 
@@ -387,16 +411,23 @@ namespace share
                 _buffer._reset();
             }
 
+            // 这是一个奇怪的接口,从右到左,减少 len给字符
+            void dec_length(int len)
+            {
+                _buffer.dec_length(len);
+            }
+
+
         private:
             template<typename T>
             void _fmt_integer(T v)
             {
                 if (_buffer.avail() < MAX_NUMERIC_SIZE) {
-                    if ( NULL == _buffer._malloc_heap(2*_buffer._cur_capacity()+MAX_NUMERIC_SIZE) ) {
+                    if ( NULL == _buffer._malloc_heap(2*_buffer.cur_capacity()+MAX_NUMERIC_SIZE) ) {
                         return ;
                     }
                 }
-                _buffer._add(static_cast<int>(convert(_buffer._current(), v)));
+                _buffer._inc_length(static_cast<int>(convert(_buffer.current(), v)));
             }
 
             Buffer _buffer;
