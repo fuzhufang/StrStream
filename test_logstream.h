@@ -69,7 +69,9 @@ void test_data(share::sstream::StrStream<share::sstream::StreamBuf<SIZE> >& logo
         int b;
     };
     _sNetModule* pobj=(_sNetModule*)0x12ab34ef;
-    logos<<"sNetModule="<<pobj<<"\n";
+    logos<<"sNetModule="<<pobj<<"==="<<"0x12ab34ef"<<"\n";
+    pobj=(_sNetModule*)65535;
+    logos<<"sNetModule="<<pobj<<"==="<<"65535"<<"\n";
 
     float f1=123.456f;
     logos<<"f1="<<f1<<"|min_float="<<std::numeric_limits<float>::min()<<"|max_float="<<std::numeric_limits<float>::max()<<"\n";
@@ -89,7 +91,13 @@ void test_data(share::sstream::StrStream<share::sstream::StreamBuf<SIZE> >& logo
     std::string str1="FZF@163.com";
     logos<<"str1="<<str1<<"\n";
 
-    test_write_file("test_data-all-data", logos.buffer().data());
+
+    share::sstream::StrStream<share::sstream::StreamBuf<64> > msg;
+    msg<<"64 byte-length";
+    msg.dec_length(100);
+    logos<<msg.c_str();
+
+    test_write_file("test_data-all-data", logos.data());
     //test_write_file("test_data-all-to-string", logos.buffer().to_string().c_str());
 }
 void test_logstream ()
@@ -99,45 +107,45 @@ void test_logstream ()
         share::sstream::StrStream<share::sstream::StreamBuf<10> > logos;
         const char* ptest = "0123456789";
         logos<<ptest;
-        test_write_file("stack size 10, wirte 10", logos.buffer().data());
+        test_write_file("stack size 10, wirte 10", logos.data());
     }
 
     {// 测试栈缓冲区充足的情况
         share::sstream::StrStream<share::sstream::StreamBuf<64> > logos;
         const char* ptest = "0123456789";
         logos<<ptest;
-        test_write_file("stack size 64, wirte 10", logos.buffer().data());
+        test_write_file("stack size 64, wirte 10", logos.data());
     }
 
     {// 测试栈缓冲区不足的情况
         share::sstream::StrStream<share::sstream::StreamBuf<5> > logos;
         const char* ptest = "0123456789";
         logos<<ptest;
-        test_write_file("stack size 5, wirte 10", logos.buffer().data());
+        test_write_file("stack size 5, wirte 10", logos.data());
     }
 
     {// 测试栈缓冲区为0的情况
         share::sstream::StrStream<share::sstream::StreamBuf<0> > logos; // 等价于std::ostringstream
         const char* ptest = "0123456789";
         logos<<ptest;
-        test_write_file("stack size 0, wirte 10", logos.buffer().data());
+        test_write_file("stack size 0, wirte 10", logos.data());
     }
     {
         share::sstream::StrStream<share::sstream::StreamBuf<0> > logos; // 等价于std::ostringstream
         test_data(logos);
-        test_write_file("stack size 0, wirte more", logos.buffer().data());
+        test_write_file("stack size 0, wirte more", logos.data());
     }
 
     {
         share::sstream::StrStream<share::sstream::StreamBuf<128> > logos; // 前期使用栈空间,后来栈不足后,使用堆
         test_data(logos);
-        test_write_file("stack size 128, wirte more", logos.buffer().data());
+        test_write_file("stack size 128, wirte more", logos.data());
     }
 
     {
         share::sstream::StrStream<share::sstream::StreamBuf<1024> > logos; // 一直使用栈空间
         test_data(logos);
-        test_write_file("stack size 1024, wirte more", logos.buffer().data());
+        test_write_file("stack size 1024, wirte more", logos.data());
     }
 
     test_write_file("END TEST", "+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
