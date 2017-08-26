@@ -36,10 +36,12 @@ A fast string stream
         test_write_file("stack size 0, wirte 10", logos.buffer().data());
     }
 
-如果您觉得类型名称比较长, 用typedef声明一些别名, 例如:
-typedef share::sstream::StrStream<share::sstream::StreamBuf<256> > msg_stream_type;
-typedef share::sstream::StrStream<share::sstream::StreamBuf<512> > small_sql_stream_type;
-typedef share::sstream::StrStream<share::sstream::StreamBuf<1024> > log_stream_type;
+	{//如果您觉得类型名称比较长, 用typedef声明一些别名, 例如:
+		typedef share::sstream::StrStream<share::sstream::StreamBuf<256> > msg_stream_type;
+		typedef share::sstream::StrStream<share::sstream::StreamBuf<512> > small_sql_stream_type;
+		typedef share::sstream::StrStream<share::sstream::StreamBuf<1024> > log_stream_type;
+	}
+
 
 ## 例如编译测试用例 ##
 g++ test_main.cc -o test
